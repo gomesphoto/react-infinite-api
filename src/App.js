@@ -27,7 +27,8 @@ const bindContainerMonitor = () => {
   return containerMonitor
 }
 
-let watcherIndex = 24;
+let watcherTargetIndex = 24;
+let watchers = []
 
 export default class App extends Component {
   state = {
@@ -35,36 +36,13 @@ export default class App extends Component {
     hasMore: true
   }
 
-  applyScrollMonitor = () => {
-    var _this = this;
-    const watchers = []
-    var listElements = document.getElementsByClassName('list-item')
-
-    console.log('APPLYSCROLLMONITOR / addEventListener to index', watcherIndex)
-
-    const watcher = containerMonitor.create(listElements[watcherIndex])
-    watcherIndex += 25
-
-    watcher.enterViewport(function() {
-      _this.callApi()
-      console.log( 'WATCHER entered viewport / load more items' )
-    })
-    watcher.exitViewport(function() {
-      console.log( 'WATCHER left viewport / removeEventListener' )
-      watchers[0].destroy()
-      watchers.shift()
-    })
-
-    watchers.push(watcher)
-    }
-
-  callApi = () =>
-    loremApi(30).then(({ data }) => this.loadMore(data)).then(this.applyScrollMonitor)
-
   componentDidMount = () => {
     bindContainerMonitor()
     this.callApi()
   }
+
+  callApi = () =>
+    loremApi(30).then(({ data }) => this.loadMore(data)).then(this.applyScrollMonitor)
 
   loadMore = (data) => {
     const moreItems = parseData(data)
@@ -75,6 +53,30 @@ export default class App extends Component {
       this.setState({ items })
     }
   }
+
+  onEnterViewport = () => {
+    console.log( 'WATCHER entered viewport / load more items' )
+    this.callApi()
+  }
+
+  onExitViewport = () => {
+    console.log( 'WATCHER left viewport / removeEventListener' )
+    watchers[0].destroy()
+    watchers.shift()
+  }
+
+  applyScrollMonitor = () => {
+    var listElements = document.getElementsByClassName('list-item')
+
+    console.log('APPLYSCROLLMONITOR / addEventListener to index', watcherTargetIndex)
+    const watcher = containerMonitor.create(listElements[watcherTargetIndex])
+    watcherTargetIndex += 25
+
+    watcher.enterViewport(this.onEnterViewport)
+    watcher.exitViewport(this.onExitViewport)
+
+    watchers.push(watcher)
+    }
 
   renderItems = items =>
     items.map((item, idx) => (
