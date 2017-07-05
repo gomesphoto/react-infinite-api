@@ -21,14 +21,13 @@ const StyledItem = styled.li`
 let containerMonitor
 
 const bindContainerMonitor = () => {
+  console.log('bindContainerMonitor');
   const containerElement = document.getElementById('listContainer')
   containerMonitor = scrollMonitor.createContainer(containerElement)
   return containerMonitor
 }
 
 let watcherIndex = 24;
-
-console.log(containerMonitor);
 
 export default class App extends Component {
   state = {
@@ -41,31 +40,29 @@ export default class App extends Component {
     const watchers = []
     var listElements = document.getElementsByClassName('list-item')
 
+    console.log('APPLYSCROLLMONITOR / addEventListener to index', watcherIndex)
+
     const watcher = containerMonitor.create(listElements[watcherIndex])
     watcherIndex += 25
 
     watcher.enterViewport(function() {
       _this.callApi()
-      console.log( 'I have entered the viewport' )
+      console.log( 'WATCHER entered viewport / load more items' )
     })
     watcher.exitViewport(function() {
-      console.log( 'I have left the viewport' )
+      console.log( 'WATCHER left viewport / removeEventListener' )
       watchers[0].destroy()
       watchers.shift()
     })
 
     watchers.push(watcher)
-    console.log(watchers);
     }
 
   callApi = () =>
     loremApi(30).then(({ data }) => this.loadMore(data)).then(this.applyScrollMonitor)
 
   componentDidMount = () => {
-
     bindContainerMonitor()
-    console.log(containerMonitor);
-
     this.callApi()
   }
 
