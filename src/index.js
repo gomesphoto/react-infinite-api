@@ -23,14 +23,13 @@ const StyledItem = styled.li`
 let containerMonitor
 
 const bindContainerMonitor = () => {
-  console.log('bindContainerMonitor');
   const containerElement = document.getElementById('listContainer')
   containerMonitor = scrollMonitor.createContainer(containerElement)
   return containerMonitor
 }
 
 let watcherTargetIndex = 24;
-let watchers = []
+let watcherRegister = null
 
 class App extends Component {
   state = {
@@ -57,14 +56,8 @@ class App extends Component {
   }
 
   onEnterViewport = () => {
-    console.log( 'WATCHER entered viewport / load more items' )
     this.callApi()
-  }
-
-  onExitViewport = () => {
-    console.log( 'WATCHER left viewport / removeEventListener' )
-    watchers[0].destroy()
-    watchers.shift()
+    watcherRegister.destroy()
   }
 
   applyScrollMonitor = () => {
@@ -72,12 +65,9 @@ class App extends Component {
 
     console.log('APPLYSCROLLMONITOR / addEventListener to index', watcherTargetIndex)
     const watcher = containerMonitor.create(listElements[watcherTargetIndex])
-    watcherTargetIndex += 25
-
     watcher.enterViewport(this.onEnterViewport)
-    watcher.exitViewport(this.onExitViewport)
-
-    watchers.push(watcher)
+    watcherTargetIndex += 25
+    watcherRegister = watcher
     }
 
   renderItems = items =>
